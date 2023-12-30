@@ -14,10 +14,12 @@ typedef struct {
     f_size size;
 } FileInfo;
 void createDirectory(const char *dirName){
+    //create directory with permissions
  int result = mkdir(dirName, S_IRWXU | S_IRWXG | S_IRWXO);
    
 
 }
+//get file info using stat
 void getfileInfo(const char *fileName, FileInfo *file) {
     struct stat fileStat;
 
@@ -36,8 +38,7 @@ void getfileInfo(const char *fileName, FileInfo *file) {
 
 void mergeFiles(int nFiles, char *files[], char *outputName){
        f_size totalSize = 0;
-       printf("%s", outputName);
-      
+      //creates an output file
         FILE *sau = fopen(outputName, "w");
        for (int i = 2; i < nFiles -2; i++) { 
         FileInfo file;
@@ -48,9 +49,9 @@ void mergeFiles(int nFiles, char *files[], char *outputName){
       if (!sau) {
         perror("Cannot open input");
     	}
-	
+	//save total size in 10 bytes
     fprintf(sau, "%010ld", totalSize);
-    
+    //get all file info
     for (int i = 2; i < nFiles -2; i++) {
         FileInfo file;
         getfileInfo(files[i], &file);
@@ -60,7 +61,7 @@ void mergeFiles(int nFiles, char *files[], char *outputName){
     }
     printf("|");
     fprintf(sau,"|");
-    //dosya içerisindekiler burada yazılır
+    //file content has been written here
     for (int i = 2; i < nFiles - 2; i++) { 
      	FileInfo file;
      	FILE *inputFile = fopen(files[i], "r");
@@ -85,14 +86,14 @@ void extractFiles(char *archName, char *dirName) {
     FILE *sau = fopen(archName, "r");
 
     if (!sau) {
-        perror("output.sau açılmıyo");
+        perror("archive file cannot be open");
         return;
     }
-
+//calculate the size of archive file
     fseek(sau, 0, SEEK_END);
     long fileSize = ftell(sau);
     fseek(sau, 0, SEEK_SET);
-
+//allocate memory to read archive file
     char *buffer = (char *)malloc(fileSize + 1);
 
     if (!buffer) {
@@ -112,6 +113,7 @@ void extractFiles(char *archName, char *dirName) {
     FileInfo *fileInfoArray = NULL;  //dosya bilgilerinin array e kaydedilmesi
     int fileInfoCount = 0;
     int totalFileSize = 0;
+    //file informations were read by using token according to '|' character
     while (token != NULL) {
         if (strstr(token, ".txt") != NULL) {
             strcpy(fileInfo.filename, token);
@@ -147,7 +149,7 @@ void extractFiles(char *archName, char *dirName) {
         token = strtok(NULL, delimiters);
     }
 
-
+//set size of each file inside archive
     int filesizes = fileSize;
     for(int i = fileInfoCount - 1; i >=0; --i){
     	filesizes += fileInfoArray[i].size;
@@ -157,7 +159,7 @@ void extractFiles(char *archName, char *dirName) {
     int next = fileSize;
 
     for (int i = fileInfoCount - 1; i >= 0; i--) {
-
+// directory/filename was created
   	char *archDir = (char *)malloc(strlen(fileInfoArray[i].filename) + strlen(dirName) + strlen(archName) + 1);
 
     sprintf(archDir, "%s/%s", dirName, fileInfoArray[i].filename);
@@ -194,11 +196,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-
+// tarsau -b txt1.txt txt2.txt -o tar.sau
 if(strcmp(argv[1], "-b") == 0) {
     char *outputName = argv[argc-1]; 
     mergeFiles(argc, argv, outputName);
 }
+// tarsau -a tar.sau d1
 else if(strcmp(argv[1], "-a") == 0){
 
  char *outputName = argv[argc-2]; 
