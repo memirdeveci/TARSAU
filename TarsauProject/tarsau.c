@@ -13,7 +13,11 @@ typedef struct {
     char permissions[11]; 
     f_size size;
 } FileInfo;
+void createDirectory(const char *dirName){
+ int result = mkdir(dirName, S_IRWXU | S_IRWXG | S_IRWXO);
+   
 
+}
 void getfileInfo(const char *fileName, FileInfo *file) {
     struct stat fileStat;
 
@@ -50,7 +54,7 @@ void mergeFiles(int nFiles, char *files[], char *outputName){
     for (int i = 2; i < nFiles -2; i++) {
         FileInfo file;
         getfileInfo(files[i], &file);
- printf("|%s, %s, %ld", file.filename, file.permissions, file.size);
+
          fprintf(sau, "|%s, %s, %ld", file.filename, file.permissions, file.size);
  
     }
@@ -75,7 +79,9 @@ void mergeFiles(int nFiles, char *files[], char *outputName){
 }
 
 
-void extractFiles(char *archName, char dirName[]) {
+void extractFiles(char *archName, char *dirName) {
+    createDirectory(dirName);
+    
     FILE *sau = fopen(archName, "r");
 
     if (!sau) {
@@ -152,8 +158,11 @@ void extractFiles(char *archName, char dirName[]) {
 
     for (int i = fileInfoCount - 1; i >= 0; i--) {
 
-       // char chunkBuffer[fileInfoArray[i].size];
-	FILE *destFile = fopen(fileInfoArray[i].filename, "wb");
+  	char *archDir = (char *)malloc(strlen(fileInfoArray[i].filename) + strlen(dirName) + strlen(archName) + 1);
+
+    sprintf(archDir, "%s/%s", dirName, fileInfoArray[i].filename);
+    // Open destination file
+    FILE *destFile = fopen(archDir, "wb");
 	
 	int incrs = next - fileInfoArray[i].size;
 
@@ -164,11 +173,16 @@ void extractFiles(char *archName, char dirName[]) {
         }
         next = incrs;
         fclose(destFile);
+            free(archDir);
     }
-
-    // Free memory
+    for(int i = fileInfoCount - 1; i >=0; --i){
+    	printf("%s, ", fileInfoArray[i].filename);
+    }
+    printf("files opened in the %s directory", dirName );
+  
     free(fileInfoArray);
     free(buffer);
+
     fclose(sau);
 }
 
@@ -186,8 +200,10 @@ if(strcmp(argv[1], "-b") == 0) {
     mergeFiles(argc, argv, outputName);
 }
 else if(strcmp(argv[1], "-a") == 0){
- char *outputName = argv[argc-1]; 
-       extractFiles(outputName, "fdsf");
+
+ char *outputName = argv[argc-2]; 
+ char *dirName = argv[argc-1];
+       extractFiles(outputName, dirName);
 
 }
 
